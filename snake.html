@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        canvas {
+            border: 3px solid #333;
+            background-color: #111;
+        }
+        .controls {
+            margin-top: 20px;
+            text-align: left;
+            background-color: #1E1E1E;
+            padding: 15px;
+            border-radius: 8px;
+            max-width: 300px;
+            margin: 20px auto;
+        }
+        .key {
+            background-color: #333;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-right: 10px;
+            font-family: monospace;
+        }
+        .back-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        #scoreDisplay {
+            font-size: 20px;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Snake Game</h1>
+    <div id="scoreDisplay">Score: 0</div>
+    <canvas id="snakeCanvas" width="400" height="400"></canvas>
+    <div class="controls">
+        <h3>Controls</h3>
+        <p><span class="key">←</span> Left</p>
+        <p><span class="key">→</span> Right</p>
+        <p><span class="key">↑</span> Up</p>
+        <p><span class="key">↓</span> Down</p>
+    </div>
+    <button class="back-button" onclick="window.location.href='GAME.html'">Back to Menu</button>
+
+    <script>
+        const canvas = document.getElementById("snakeCanvas");
+        const ctx = canvas.getContext("2d");
+        const gridSize = 20;
+        const tileCount = 20;
+        let snake = [{x: 10, y: 10}];
+        let food = {x: 5, y: 5, type: "normal"}; // Can be "normal" or "boost"
+        let direction = {x: 0, y: 0};
+        let gameOver = false;
+        let score = 0;
+        let speed = 100; // Constant speed
+
+        function gameLoop() {
+            if (gameOver) return;
+            setTimeout(() => {
+                moveSnake();
+                checkCollision();
+                drawGame();
+                gameLoop();
+            }, speed); // Fixed speed
+        }
+
+        function drawGame() {
+            ctx.fillStyle = "#111";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw snake
+            ctx.fillStyle = "#00FF00";
+            snake.forEach(part => {
+                ctx.fillRect(part.x * gridSize, part.y * gridSize, gridSize, gridSize);
+                ctx.strokeStyle = "#000";
+                ctx.strokeRect(part.x * gridSize, part.y * gridSize, gridSize, gridSize);
+            });
+
+            // Draw food
+            if (food.type === "normal") {
+                ctx.fillStyle = "#FF0000"; // Red for normal food
+                ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize, gridSize);
+            } else {
+                ctx.fillStyle = "#FFFF00"; // Yellow for boost
+                ctx.beginPath();
+                ctx.arc(
+                    food.x * gridSize + gridSize/2,
+                    food.y * gridSize + gridSize/2,
+                    gridSize/2,
+                    0,
+                    Math.PI * 2
+                );
+                ctx.fill();
+            }
+        }
+
+        function moveSnake() {
+            const head = {
+                x: (snake[0].x + direction.x + tileCount) % tileCount, // Wrap around
+                y: (snake[0].y + direction.y + tileCount) % tileCount
+            };
+            snake.unshift(head);
+
+            if (head.x === food.x && head.y === food.y) {
+                if (food.type === "normal") {
+                    score += 10;
+                } else {
+                    score += 20;
+                    snake.push({...snake[snake.length-1]}); // Extra growth for boost
+                }
+                document.getElementById("scoreDisplay").textContent = `Score: ${score}`;
+                spawnFood();
+            } else {
+                snake.pop();
+            }
+        }
+
+        function checkCollision() {
+            const head = snake[0];
+            // Check if snake hits itself (skip head)
+            if (snake.slice(1).some(part => part.x === head.x && part.y === head.y)) {
+                gameOver = true;
+                alert(`Game Over! Score: ${score}`);
+                resetGame();
+            }
+        }
+
+        function spawnFood() {
+            const rand = Math.random();
+            food = {
+                x: Math.floor(Math.random() * tileCount),
+                y: Math.floor(Math.random() * tileCount),
+                type: rand < 0.8 ? "normal" : "boost" // 20% chance for boost
+            };
+            // Ensure food doesn't spawn on snake
+            while (snake.some(part => part.x === food.x && part.y === food.y)) {
+                food = {
+                    x: Math.floor(Math.random() * tileCount),
+                    y: Math.floor(Math.random() * tileCount),
+                    type: rand < 0.8 ? "normal" : "boost"
+                };
+            }
+        }
+
+        function resetGame() {
+            snake = [{x: 10, y: 10}];
+            direction = {x: 0, y: 0};
+            score = 0;
+            gameOver = false;
+            document.getElementById("scoreDisplay").textContent = `Score: ${score}`;
+            spawnFood();
+            gameLoop();
+        }
+
+        document.addEventListener("keydown", e => {
+            if (gameOver) return;
+            switch (e.key) {
+                case "ArrowUp": if (direction.y === 0) direction = {x: 0, y: -1}; break;
+                case "ArrowDown": if (direction.y === 0) direction = {x: 0, y: 1}; break;
+                case "ArrowLeft": if (direction.x === 0) direction = {x: -1, y: 0}; break;
+                case "ArrowRight": if (direction.x === 0) direction = {x: 1, y: 0}; break;
+            }
+        });
+
+        spawnFood();
+        gameLoop();
+    </script>
+</body>
+</html>

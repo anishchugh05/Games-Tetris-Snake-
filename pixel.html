@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Art</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        canvas {
+            border: 3px solid #333;
+            background-color: #111;
+        }
+        .color-picker {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px;
+        }
+        .color {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #555;
+        }
+        .selected {
+            border: 2px solid white;
+        }
+        .back-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Pixel Art</h1>
+    <canvas id="pixelCanvas" width="400" height="400"></canvas>
+    <div class="color-picker">
+        <div class="color selected" style="background-color: #000000;" data-color="#000000"></div>
+        <div class="color" style="background-color: #FFFFFF;" data-color="#FFFFFF"></div>
+        <div class="color" style="background-color: #FF0000;" data-color="#FF0000"></div>
+        <div class="color" style="background-color: #00FF00;" data-color="#00FF00"></div>
+        <div class="color" style="background-color: #0000FF;" data-color="#0000FF"></div>
+        <div class="color" style="background-color: #FFFF00;" data-color="#FFFF00"></div>
+        <div class="color" style="background-color: #FF00FF;" data-color="#FF00FF"></div>
+        <div class="color" style="background-color: #00FFFF;" data-color="#00FFFF"></div>
+    </div>
+    <button class="back-button" onclick="window.location.href='GAME.html'">Back to Menu</button>
+
+    <script>
+        const canvas = document.getElementById("pixelCanvas");
+        const ctx = canvas.getContext("2d");
+        const pixelSize = 20;
+        const rows = canvas.height / pixelSize;
+        const cols = canvas.width / pixelSize;
+        let currentColor = "#000000";
+        let isDrawing = false;
+
+        // Initialize grid
+        function initGrid() {
+            ctx.fillStyle = "#111";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            drawGridLines();
+        }
+
+        // Draw grid lines
+        function drawGridLines() {
+            ctx.strokeStyle = "#333";
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i <= cols; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * pixelSize, 0);
+                ctx.lineTo(i * pixelSize, canvas.height);
+                ctx.stroke();
+            }
+            for (let j = 0; j <= rows; j++) {
+                ctx.beginPath();
+                ctx.moveTo(0, j * pixelSize);
+                ctx.lineTo(canvas.width, j * pixelSize);
+                ctx.stroke();
+            }
+        }
+
+        // Handle color selection
+        document.querySelectorAll(".color").forEach(color => {
+            color.addEventListener("click", () => {
+                document.querySelectorAll(".color").forEach(c => c.classList.remove("selected"));
+                color.classList.add("selected");
+                currentColor = color.getAttribute("data-color");
+            });
+        });
+
+        // Handle drawing
+        canvas.addEventListener("mousedown", startDrawing);
+        canvas.addEventListener("mousemove", draw);
+        canvas.addEventListener("mouseup", stopDrawing);
+        canvas.addEventListener("mouseleave", stopDrawing);
+        canvas.addEventListener("contextmenu", e => e.preventDefault());
+
+        function startDrawing(e) {
+            isDrawing = true;
+            draw(e);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            const x = Math.floor(e.offsetX / pixelSize) * pixelSize;
+            const y = Math.floor(e.offsetY / pixelSize) * pixelSize;
+
+            if (e.buttons === 1) { // Left click (draw)
+                ctx.fillStyle = currentColor;
+                ctx.fillRect(x, y, pixelSize, pixelSize);
+                ctx.strokeStyle = "#333";
+                ctx.strokeRect(x, y, pixelSize, pixelSize);
+            } else if (e.buttons === 2) { // Right click (erase)
+                ctx.fillStyle = "#111";
+                ctx.fillRect(x, y, pixelSize, pixelSize);
+                ctx.strokeStyle = "#333";
+                ctx.strokeRect(x, y, pixelSize, pixelSize);
+            }
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        initGrid();
+    </script>
+</body>
+</html>
